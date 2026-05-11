@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.bank</groupId>
+  <artifactId>java-banking-system</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+  <name>Java Banking System Simulation</name>
+  <description>
+    A complete banking system demonstrating Java 8+ features, design patterns,
+    exception handling, streams, and file persistence.
+  </description>
+
+  <properties>
+    <java.version>17</java.version>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <build>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <testSourceDirectory>src/test/java</testSourceDirectory>
+
+    <plugins>
+      <!-- Compile -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <release>${java.version}</release>
+        </configuration>
+      </plugin>
+
+      <!-- Executable JAR -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>com.bank.Main</mainClass>
+            </manifest>
+          </archive>
+          <finalName>banking-system</finalName>
+        </configuration>
+      </plugin>
+
+      <!-- Run tests via exec:java -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>run-app</id>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <mainClass>com.bank.Main</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>run-tests</id>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <mainClass>com.bank.BankingSystemTest</mainClass>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
