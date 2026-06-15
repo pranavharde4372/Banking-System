@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tabbed Bank System</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        input, select { padding: 12px; margin: 10px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 12px; background-color: #3949ab; color: white; border: none; cursor: pointer; width: 100%; font-weight: bold; border-radius: 5px; margin-bottom: 10px; }
+        button:hover { background-color: #283593; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background-color: #1a237e; color: white; }
+        
+        .section { display: none; } 
+        .active { display: block; }
+        .tab-nav { display: none; background-color: #1a237e; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        .tab-btn { background-color: transparent; width: auto; margin: 0 5px; padding: 10px 15px; border-radius: 4px; }
+        .tab-btn:hover { background-color: #3949ab; }
+        .logout-btn { background-color: #d32f2f; float: right; margin-right: 10px; }
+        .logout-btn:hover { background-color: #b71c1c; }
+
+        h1, h2, h3 { color: #1a237e; text-align: center; margin-top: 0; }
+        .clickable-acc { color: #1976d2; text-decoration: underline; cursor: pointer; font-weight: bold; }
+        .text-link { color: #3949ab; cursor: pointer; text-decoration: underline; font-size: 14px; text-align: center; display: block; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div id="loginSection" class="section active">
+        <h1>🏦 Bank Login</h1>
+        <input type="text" id="loginUser" placeholder="Username">
+        <input type="password" id="loginPass" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <span class="text-link" onclick="showAuth('forgotPasswordSection')">Forgot Password?</span>
+        <button style="background-color: #e0e0e0; color: #333; margin-top: 15px;" onclick="showAuth('registerSection')">Create an Account</button>
+    </div>
+
+    <div id="registerSection" class="section">
+        <h1>📝 Register</h1>
+        <input type="text" id="regUser" placeholder="Choose a Username">
+        <input type="email" id="regEmail" placeholder="Email Address">
+        <input type="tel" id="regPhone" placeholder="Phone Number">
+        <input type="password" id="regPass" placeholder="Choose a Password">
+        <button style="background-color: #2e7d32;" onclick="register()">Submit Registration</button>
+        <button style="background-color: #e0e0e0; color: #333;" onclick="showAuth('loginSection')">Back to Login</button>
+    </div>
+
+    <div id="forgotPasswordSection" class="section">
+        <h1>🔐 Reset Password</h1>
+        <p style="text-align: center; color: gray; font-size: 14px;">Verify your identity to reset your password.</p>
+        <input type="text" id="fpUser" placeholder="Username">
+        <input type="email" id="fpEmail" placeholder="Registered Email Address">
+        <input type="tel" id="fpPhone" placeholder="Registered Phone Number">
+        <input type="password" id="fpNewPass" placeholder="Enter New Password">
+        <button style="background-color: #f57c00;" onclick="forgotPassword()">Reset Password</button>
+        <button style="background-color: #e0e0e0; color: #333;" onclick="showAuth('loginSection')">Back to Login</button>
+    </div>
+
+    <div id="tabNav" class="tab-nav">
+        <button class="tab-btn" onclick="showTab('dashboardTab')">Dashboard</button>
+        <button class="tab-btn" onclick="showTab('balanceTab')">Add/Remove Balance</button>
+        <button class="tab-btn" onclick="showTab('transferTab')">Transfer</button>
+        <button class="tab-btn" style="background-color: #424242;" onclick="showTab('deleteTab')">Delete</button>
+        <button class="tab-btn logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <div id="dashboardTab" class="section">
+        <h2>📊 Live Accounts Overview</h2>
+        <table>
+            <thead><tr><th>Account No.</th><th>Full Name</th><th>Type</th><th>Balance (₹)</th></tr></thead>
+            <tbody id="accountsBody"></tbody>
+        </table>
+
+        <hr style="margin: 30px 0;">
+        <h3>🆕 Open New Account (KYC Required)</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <input type="text" id="newAccNo" placeholder="Account No (e.g., ACC-999) *" style="grid-column: span 2;">
+            <input type="text" id="newFirstName" placeholder="First Name *">
+            <input type="text" id="newMiddleName" placeholder="Middle Name *">
+            <input type="text" id="newLastName" placeholder="Last Name *">
+            <input type="date" id="newDob" placeholder="Date of Birth *">
+            <input type="tel" id="newPhone" placeholder="Phone Number *">
+            <select id="newType"><option>SAVINGS</option><option>CURRENT</option></select>
+            <input type="text" id="newAadhar" placeholder="Aadhar Number *">
+            <input type="text" id="newPan" placeholder="PAN Number *">
+            <input type="number" id="newBal" placeholder="Initial Balance *" style="grid-column: span 2;">
+        </div>
+        <button style="background-color: #2e7d32; margin-top: 10px;" onclick="createAccount()">Open Account</button>
+    </div>
+
+    <div id="balanceTab" class="section">
+        <h2>💸 Deposit & Withdraw</h2>
+        <div style="background-color: #f9fbe7; padding: 20px; border-radius: 8px; border: 1px solid #cddc39;">
+            <input type="text" id="dwAcc" placeholder="Enter Account No.">
+            <input type="number" id="dwAmt" placeholder="Amount (₹)">
+            <div style="display: flex; gap: 10px;">
+                <button style="background-color: #2e7d32;" onclick="modifyBalance('deposit')">Add Balance</button>
+                <button style="background-color: #e65100;" onclick="modifyBalance('withdraw')">Remove Balance</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="transferTab" class="section">
+        <h2>🔄 Transfer Funds</h2>
+        <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; border: 1px solid #90caf9;">
+            <input type="text" id="fromAcc" placeholder="From Account No.">
+            <input type="text" id="toAcc" placeholder="To Account No.">
+            <input type="number" id="transAmt" placeholder="Amount (₹)">
+            <button onclick="transfer()">Execute Transfer</button>
+        </div>
+    </div>
+
+    <div id="deleteTab" class="section">
+        <h2>⚠️ Delete Account</h2>
+        <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; border: 1px solid #ef9a9a;">
+            <input type="text" id="delAccNo" placeholder="Enter Account No. to Delete">
+            <button style="background-color: #d32f2f;" onclick="deleteAccount()">Permanently Delete</button>
+        </div>
+    </div>
+
+    <div id="historyTab" class="section">
+        <h2>📜 Transaction History</h2>
+        <h3 id="historyTitle" style="color: #3949ab; margin-top: 0;"></h3>
+        <table>
+            <thead><tr><th>Date & Time</th><th>Type</th><th>Description</th><th>Amount (₹)</th></tr></thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+        <br>
+        <button style="background-color: #e0e0e0; color: #333;" onclick="showTab('dashboardTab')">Back to Dashboard</button>
+    </div>
+
+</div>
+
+<script>
+    const API_URL = "http://localhost:8080/api";
+
+    function showAuth(sectionId) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById('tabNav').style.display = 'none';
+        document.getElementById(sectionId).classList.add('active');
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById('tabNav').style.display = 'block';
+        document.getElementById(tabId).classList.add('active');
+        if(tabId === 'dashboardTab') loadAccounts();
+    }
+
+    function logout() { showAuth('loginSection'); document.getElementById('loginPass').value = ''; }
+
+    async function login() {
+        let res = await fetch(`${API_URL}/login`, {
+            method: "POST", headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({username: document.getElementById('loginUser').value, password: document.getElementById('loginPass').value})
+        });
+        if(res.ok) showTab('dashboardTab');
+        else alert(await res.text());
+    }
+
+    async function register() {
+        let res = await fetch(`${API_URL}/register`, {
+            method: "POST", headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                username: document.getElementById('regUser').value, email: document.getElementById('regEmail').value,
+                phone: document.getElementById('regPhone').value, password: document.getElementById('regPass').value
+            })
+        });
+        alert(await res.text());
+        if(res.ok) showAuth('loginSection');
+    }
+
+    async function forgotPassword() {
+        let res = await fetch(`${API_URL}/forgot-password`, {
+            method: "POST", headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                username: document.getElementById('fpUser').value, email: document.getElementById('fpEmail').value,
+                phone: document.getElementById('fpPhone').value, newPassword: document.getElementById('fpNewPass').value
+            })
+        });
+        alert(await res.text());
+        if(res.ok) showAuth('loginSection');
+    }
+
+    async function loadAccounts() {
+        try {
+            let res = await fetch(`${API_URL}/accounts`);
+            let data = await res.json();
+            document.getElementById('accountsBody').innerHTML = data.map(a => 
+                `<tr>
+                    <td><span class="clickable-acc" onclick="viewHistory('${a.accountNumber}')">${a.accountNumber}</span></td>
+                    <td>${a.firstName} ${a.lastName}</td>
+                    <td>${a.type}</td>
+                    <td><strong>₹${a.balance}</strong></td>
+                </tr>`
+            ).join("");
+        } catch (e) { console.error(e); }
+    }
+
+    async function createAccount() {
+        let payload = {
+            accNo: document.getElementById('newAccNo').value, firstName: document.getElementById('newFirstName').value,
+            middleName: document.getElementById('newMiddleName').value, lastName: document.getElementById('newLastName').value,
+            dob: document.getElementById('newDob').value, phone: document.getElementById('newPhone').value,
+            aadhar: document.getElementById('newAadhar').value, pan: document.getElementById('newPan').value,
+            type: document.getElementById('newType').value, balance: document.getElementById('newBal').value
+        };
+
+        if (!payload.accNo.trim() || !payload.firstName.trim() || !payload.middleName.trim() || 
+            !payload.lastName.trim() || !payload.dob.trim() || !payload.phone.trim() || 
+            !payload.aadhar.trim() || !payload.pan.trim() || !payload.balance) {
+            alert("⚠️ ERROR: Every single field must be filled out to open an account.");
+            return;
+        }
+
+        let res = await fetch(`${API_URL}/create`, {
+            method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload)
+        });
+        
+        alert(await res.text());
+        
+        if (res.ok) {
+            document.querySelectorAll('#dashboardTab input').forEach(input => input.value = '');
+            loadAccounts();
+        }
+    }
+
+    async function modifyBalance(type) {
+        let res = await fetch(`${API_URL}/${type}`, {
+            method: "POST", headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ accNo: document.getElementById('dwAcc').value, amount: document.getElementById('dwAmt').value })
+        });
+        alert(await res.text()); loadAccounts();
+    }
+
+    async function transfer() {
+        let res = await fetch(`${API_URL}/transfer`, {
+            method: "POST", headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ from: document.getElementById('fromAcc').value, to: document.getElementById('toAcc').value, amount: document.getElementById('transAmt').value })
+        });
+        alert(await res.text()); loadAccounts();
+    }
+
+    async function deleteAccount() {
+        let accNo = document.getElementById('delAccNo').value;
+        if(!confirm(`Delete ${accNo}?`)) return;
+        await fetch(`${API_URL}/accounts/${accNo}`, { method: "DELETE" });
+        document.getElementById('delAccNo').value = ''; showTab('dashboardTab');
+    }
+
+    async function viewHistory(accNo) {
+        let res = await fetch(`${API_URL}/accounts/${accNo}/history`);
+        let history = await res.json();
+        document.getElementById('historyTitle').innerText = `Account: ${accNo}`;
+        document.getElementById('historyBody').innerHTML = history.map(t => {
+            let isInc = t.type === 'OPENING_BALANCE' || t.type === 'DEPOSIT';
+            let color = isInc ? 'green' : 'red';
+            return `<tr><td>${t.date}</td><td style="color:${color};">${t.type}</td><td>${t.description}</td><td style="color:${color};">${isInc?'+':'-'}₹${t.amount}</td></tr>`;
+        }).join("");
+        showTab('historyTab');
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactions - Bank Operations</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; }
+        .back-link { text-decoration: none; color: #0056b3; font-weight: bold; display: inline-block; margin-bottom: 20px; }
+        .section-card { border: 1px solid #ddd; padding: 20px; border-radius: 6px; margin-bottom: 20px; background-color: #f9f9f9; }
+        h2 { margin-top: 0; color: #333; }
+        .input-group { margin-bottom: 12px; }
+        .input-group input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 1; padding: 10px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; color: white; }
+        .btn-deposit { background-color: #28a745; }
+        .btn-withdraw { background-color: #dc3545; }
+        .btn-transfer { background-color: #007bff; width: 100%; }
+        button:disabled { background-color: #bbb; cursor: not-allowed; }
+        .status-msg { font-weight: bold; margin-top: 15px; min-height: 18px; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+
+    <a href="dashboard.html" class="back-link">⬅ Back to Dashboard</a>
+
+    <div class="section-card">
+        <h2>💸 Deposit / Withdraw</h2>
+        <form id="opForm">
+            <div class="input-group">
+                <input type="text" id="accNo" placeholder="Account Number" required>
+            </div>
+            <div class="input-group">
+                <input type="number" id="opAmount" placeholder="Amount (₹)" min="1" step="0.01" required>
+            </div>
+            <div class="btn-group">
+                <button type="button" id="depBtn" class="btn-deposit" onclick="handleOperation('deposit')">Deposit</button>
+                <button type="button" id="withBtn" class="btn-withdraw" onclick="handleOperation('withdraw')">Withdraw</button>
+            </div>
+        </form>
+        <p id="opMessage" class="status-msg"></p>
+    </div>
+
+    <div class="section-card">
+        <h2>🔄 Transfer Funds</h2>
+        <form id="transferForm">
+            <div class="input-group">
+                <input type="text" id="fromAcc" placeholder="From Account Number" required>
+            </div>
+            <div class="input-group">
+                <input type="text" id="toAcc" placeholder="To Account Number" required>
+            </div>
+            <div class="input-group">
+                <input type="number" id="xferAmount" placeholder="Amount (₹)" min="1" step="0.01" required>
+            </div>
+            <button type="submit" id="xferBtn" class="btn-transfer">Transfer Funds</button>
+        </form>
+        <p id="xferMessage" class="status-msg"></p>
+    </div>
+
+    <script>
+        // Centralized UI toggling for loading states
+        function setFormLoading(formType, isLoading) {
+            if (formType === 'op') {
+                document.getElementById('depBtn').disabled = isLoading;
+                document.getElementById('withBtn').disabled = isLoading;
+            } else {
+                document.getElementById('xferBtn').disabled = isLoading;
+            }
+        }
+
+        // Handles Deposits and Withdrawals
+        async function handleOperation(type) {
+            const accNo = document.getElementById("accNo").value.trim();
+            const amount = document.getElementById("opAmount").value;
+            const messageEl = document.getElementById("opMessage");
+
+            if (!accNo || !amount || amount <= 0) {
+                messageEl.className = "status-msg error";
+                messageEl.innerText = "⚠ Please provide a valid account number and positive amount.";
+                return;
+            }
+
+            setFormLoading('op', true);
+            messageEl.innerText = "";
+
+            try {
+                let response = await fetch(`http://localhost:8080/api/${type}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ accNo, amount: parseFloat(amount) })
+                });
+
+                let text = await response.text();
+                
+                if (response.ok) {
+                    messageEl.className = "status-msg success";
+                    messageEl.innerText = `✅ ${text}`;
+                    document.getElementById("opForm").reset();
+                } else {
+                    messageEl.className = "status-msg error";
+                    messageEl.innerText = `❌ ${text}`;
+                }
+            } catch (err) {
+                messageEl.className = "status-msg error";
+                messageEl.innerText = "❌ Connection failed. Check backend status.";
+            } finally {
+                setFormLoading('op', false);
+            }
+        }
+
+        // Handles Peer-to-Peer Inter-account Transfers
+        document.getElementById("transferForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const fromAcc = document.getElementById("fromAcc").value.trim();
+            const toAcc = document.getElementById("toAcc").value.trim();
+            const amount = document.getElementById("xferAmount").value;
+            const messageEl = document.getElementById("xferMessage");
+
+            if (fromAcc === toAcc) {
+                messageEl.className = "status-msg error";
+                messageEl.innerText = "⚠ Origin and target accounts cannot be identical.";
+                return;
+            }
+
+            setFormLoading('xfer', true);
+            messageEl.innerText = "";
+
+            try {
+                let response = await fetch("http://localhost:8080/api/transfer", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ from: fromAcc, to: toAcc, amount: parseFloat(amount) })
+                });
+
+                let text = await response.text();
+
+                if (response.ok) {
+                    messageEl.className = "status-msg success";
+                    messageEl.innerText = `✅ ${text}`;
+                    document.getElementById("transferForm").reset();
+                } else {
+                    messageEl.className = "status-msg error";
+                    messageEl.innerText = `❌ ${text}`;
+                }
+            } catch (err) {
+                messageEl.className = "status-msg error";
+                messageEl.innerText = "❌ Connection failed. Check backend status.";
+            } finally {
+                setFormLoading('xfer', false);
+            }
+        });
+    </script>
+</body>
+</html>

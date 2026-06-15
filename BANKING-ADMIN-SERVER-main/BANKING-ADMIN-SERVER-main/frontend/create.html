@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Account</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 400px; }
+        .nav-link { text-decoration: none; color: #0056b3; font-weight: bold; margin-bottom: 20px; display: inline-block; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 15px; background-color: #28a745; color: white; border: none; cursor: pointer; width: 100%; font-size: 16px; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        #message { margin-top: 15px; font-weight: bold; }
+        .error { color: #d9534f; }
+        .success { color: #28a745; }
+    </style>
+</head>
+<body>
+    <a href="dashboard.html" class="nav-link">⬅ Back to Dashboard</a>
+    
+    <h2>🆕 Open Account</h2>
+    
+    <form id="createAccountForm">
+        <div class="form-group">
+            <label for="accNo">Account Number</label>
+            <input type="text" id="accNo" placeholder="e.g., ACC-1001" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="name">Account Holder Name</label>
+            <input type="text" id="name" placeholder="John Doe" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="type">Account Type</label>
+            <input type="text" id="type" placeholder="e.g., SAVINGS" value="SAVINGS" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="balance">Initial Balance (₹)</label>
+            <input type="number" id="balance" placeholder="0.00" min="0" step="0.01" required>
+        </div>
+        
+        <button type="submit" id="submitBtn">Open Account</button>
+    </form>
+
+    <p id="message"></p>
+
+    <script>
+        document.getElementById("createAccountForm").addEventListener("submit", async function(event) {
+            // Prevent the form from refreshing the page
+            event.preventDefault(); 
+            
+            const submitBtn = document.getElementById("submitBtn");
+            const messageEl = document.getElementById("message");
+            
+            // UI Loading state
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Creating...";
+            messageEl.className = "";
+            messageEl.innerText = "";
+
+            const requestBody = {
+                accNo: document.getElementById("accNo").value,
+                name: document.getElementById("name").value,
+                type: document.getElementById("type").value,
+                balance: parseFloat(document.getElementById("balance").value)
+            };
+
+            try {
+                let response = await fetch("http://localhost:8080/api/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestBody)
+                });
+
+                let responseText = await response.text();
+
+                if (response.ok) {
+                    messageEl.className = "success";
+                    messageEl.innerText = "✅ " + responseText;
+                    document.getElementById("createAccountForm").reset(); // Clear the form on success
+                } else {
+                    messageEl.className = "error";
+                    messageEl.innerText = "❌ Error: " + responseText;
+                }
+            } catch (error) {
+                console.error("Network Error:", error);
+                messageEl.className = "error";
+                messageEl.innerText = "❌ Failed to connect to the server. Is it running?";
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Open Account";
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Registration</title>
+    <style>
+        body { font-family: sans-serif; max-width: 350px; margin: 60px auto; padding: 20px; text-align: center; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .checkbox-group { text-align: left; margin-bottom: 15px; font-size: 14px; display: flex; align-items: center; gap: 5px; }
+        .checkbox-group input { width: auto; cursor: pointer; }
+        button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        button:disabled { background-color: #a3e2b4; cursor: not-allowed; }
+        .nav-link { display: inline-block; margin-top: 20px; text-decoration: none; color: #0056b3; font-size: 14px; }
+        #message { margin-top: 15px; font-weight: bold; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+
+    <h2>📝 Account Registration</h2>
+    
+    <form id="registerForm">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Choose a username" required minlength="4" maxlength="15" pattern="^[a-zA-Z0-9_]+$" title="Only alphanumeric characters and underscores allowed">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Create a strong password" required minlength="6">
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="togglePassword">
+            <label for="togglePassword">Show Password</label>
+        </div>
+        
+        <button type="submit" id="regBtn">Register</button>
+    </form>
+
+    <p id="message"></p>
+
+    <a href="index.html" class="nav-link">Back to Login</a>
+
+    <script>
+        // Password visibility toggle logic
+        document.getElementById("togglePassword").addEventListener("change", function() {
+            const passwordField = document.getElementById("password");
+            passwordField.type = this.checked ? "text" : "password";
+        });
+
+        // Form submission logic
+        document.getElementById("registerForm").addEventListener("submit", async function(e) {
+            e.preventDefault(); // Prevents page reload
+            
+            const regBtn = document.getElementById("regBtn");
+            const messageEl = document.getElementById("message");
+            
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+
+            // UI Reset & Loading State
+            regBtn.disabled = true;
+            regBtn.innerText = "Registering...";
+            messageEl.className = "";
+            messageEl.innerText = "";
+
+            try {
+                let response = await fetch("http://localhost:8080/api/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                let resultText = await response.text();
+
+                if (resultText === "SUCCESS") {
+                    messageEl.className = "success";
+                    messageEl.innerText = "✅ Registration successful! Redirecting to login...";
+                    
+                    // Delay redirect slightly so the user sees the confirmation text
+                    setTimeout(() => {
+                        window.location.href = "index.html";
+                    }, 2000);
+                } else {
+                    messageEl.className = "error";
+                    messageEl.innerText = `❌ Error: ${resultText || "Username already exists."}`;
+                    regBtn.disabled = false;
+                    regBtn.innerText = "Register";
+                }
+                
+            } catch (error) {
+                console.error("Registration Network Error:", error);
+                messageEl.className = "error";
+                messageEl.innerText = "❌ Connection failed. Ensure your backend server is up.";
+                regBtn.disabled = false;
+                regBtn.innerText = "Register";
+            }
+        });
+    </script>
+</body>
+</html>

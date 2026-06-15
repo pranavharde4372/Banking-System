@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Dashboard</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .nav-bar { background: #eee; padding: 10px; margin-bottom: 20px; }
+        .nav-bar a { margin-right: 15px; text-decoration: none; color: #0056b3; font-weight: bold; }
+        .account-row { padding: 8px 0; border-bottom: 1px solid #ddd; }
+        .error-msg { color: #d9534f; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <a href="create.html">Create Bank Account</a> | 
+        <a href="operations.html">Transactions</a> | 
+        <a href="index.html">Logout</a>
+    </div>
+    
+    <h2>📊 Dashboard</h2>
+    <div id="accs">Loading accounts...</div>
+
+    <script>
+        async function load() {
+            const container = document.getElementById("accs");
+            
+            try {
+                let response = await fetch("http://localhost:8080/api/accounts");
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                let data = await response.json();
+                
+                // Formatter for Indian Rupees
+                const currencyFormatter = new Intl.NumberFormat('en-IN', {
+                    style: 'currency',
+                    currency: 'INR'
+                });
+
+                // Clear the "Loading..." text
+                container.innerHTML = "";
+
+                if (data.length === 0) {
+                    container.innerHTML = "<p>No accounts found.</p>";
+                    return;
+                }
+
+                // Safely build the DOM elements to prevent XSS
+                data.forEach(account => {
+                    const p = document.createElement("p");
+                    p.className = "account-row";
+
+                    const b = document.createElement("b");
+                    b.textContent = account.accountNumber;
+
+                    const text = document.createTextNode(
+                        ` - ${account.accountHolder} - ${currencyFormatter.format(account.balance)}`
+                    );
+
+                    p.appendChild(b);
+                    p.appendChild(text);
+                    container.appendChild(p);
+                });
+
+            } catch (error) {
+                console.error("Failed to fetch accounts:", error);
+                container.innerHTML = `<p class="error-msg">Failed to load accounts. Please ensure the server is running.</p>`;
+            }
+        } 
+
+        load();
+    </script>
+</body>
+</html>
